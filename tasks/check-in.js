@@ -3,9 +3,9 @@ import chrome from "chrome-aws-lambda";
 import dotenv from "dotenv";
 // const chrome = require("chrome-aws-lambda");
 
-if (process.env.NODE_ENV !== "production") {
-  dotenv.config();
-}
+// if (process.env.NODE_ENV !== "production") {
+dotenv.config();
+// }
 
 /* GET users listing. */
 export default async (req, res) => {
@@ -13,7 +13,7 @@ export default async (req, res) => {
     process.env.NODE_ENV === "production"
       ? {
           args: chrome.args,
-          executablePath: await chrome.executablePath,
+          executablePath: process.env.os === "linux" ? "/usr/bin/chromium-browser": await chrome.executablePath,
           headless: chrome.headless,
         }
       : { headless: false }
