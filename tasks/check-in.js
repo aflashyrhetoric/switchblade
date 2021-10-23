@@ -14,7 +14,7 @@ export default async (req, res) => {
       ? {
           args: chrome.args,
           executablePath: process.env.os === "linux" ? "/usr/bin/chromium-browser": await chrome.executablePath,
-          headless: chrome.headless,
+          headless: true,
         }
       : { headless: false }
   );

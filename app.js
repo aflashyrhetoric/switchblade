@@ -23,8 +23,9 @@ router.get("/check-in", tasks.checkIn);
 router.post("/invert-image", tasks.invert);
 
 app.use("/tasks", router);
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
+const port = process.env.PORT || 3000 
+app.listen(port, () => {
+  console.log(`Server started on ${port}`);
 });
 
 export default app;
