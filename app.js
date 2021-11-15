@@ -26,6 +26,7 @@ app.use("/tasks", router);
 const port = process.env.PORT || 3000 
 app.listen(port, () => {
   console.log(`Server started on ${port}`);
+  console.log(`Available actions are exposed at tasks/{check-in|invert-image}`);
 });
 
 export default app;
