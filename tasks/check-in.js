@@ -13,12 +13,64 @@ export default async (req, res) => {
     process.env.NODE_ENV === "production"
       ? {
           args: chrome.args,
-          executablePath: process.env.os === "linux" ? "/usr/bin/chromium-browser": await chrome.executablePath,
+          executablePath:
+            process.env.os === "linux" ? "/usr/bin/chromium-browser" : await chrome.executablePath,
           headless: true,
         }
       : { headless: false }
   );
   const page = await browser.newPage();
+
+  /**
+   * LOGIN FIRST
+   */
+
+  const loginURL = "https://idp.nycenet.edu/";
+  await page.goto(loginURL, {
+    waitUntil: "networkidle2",
+  });
+  console.log("Go to page");
+
+  const loginButtonSelector = ".hero-signin-form .container .btn-warning";
+  try {
+    await page.waitForSelector(loginButtonSelector, {
+      visible: true,
+      timeout: 2000,
+    });
+
+    // Found retake button
+    console.log("Found sign in button");
+    await page.click(retake);
+  } catch {
+    console.log("No sign in button found. First time filling out the form today");
+  }
+
+  // selectors
+  const username = "#vusername";
+  const password = "#password";
+  const loginSubmitBtn = "button[type='submit']";
+
+  await page.waitForSelector(username, {
+    visible: true,
+  });
+
+  console.log("...typing username...");
+  await page.type(username, process.env.DOE_USERNAME);
+  await page.waitForTimeout(100);
+
+  console.log("...typing password...");
+  await page.type(password, process.env.DOE_PASSWORD);
+  await page.waitForTimeout(100);
+
+  console.log("...submitted successfully.");
+
+  await page.click(loginSubmitBtn);
+
+  /**
+   * FILL OUT SCREENING
+   */
+
+  await page.waitForTimeout(200);
   await page.setExtraHTTPHeaders({
     accept: "*/*",
     "accept-language": "en-US,en;q=0.9,ko;q=0.8",
@@ -51,6 +103,10 @@ export default async (req, res) => {
   await page.goto("https://healthscreening.schools.nyc", {
     waitUntil: "networkidle2",
   });
+
+  await page.click(".hero-signin-form .btn");
+  await page.waitForTimeout(2000);
+
   console.log("Go to page");
 
   // FOR TESTING
