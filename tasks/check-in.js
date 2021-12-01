@@ -17,7 +17,12 @@ export default async (req, res) => {
             process.env.os === "linux" ? "/usr/bin/chromium-browser" : await chrome.executablePath,
           headless: true,
         }
-      : { headless: false }
+      : {
+          args: chrome.args,
+          executablePath:
+            process.env.os === "linux" ? "/usr/bin/chromium-browser" : await chrome.executablePath,
+          headless: true,
+        }
   );
   const page = await browser.newPage();
 
@@ -25,25 +30,13 @@ export default async (req, res) => {
    * LOGIN FIRST
    */
 
+  console.log("\n=======> BEGINNING CHECK IN");
   const loginURL = "https://idp.nycenet.edu/";
   await page.goto(loginURL, {
     waitUntil: "networkidle2",
   });
-  console.log("Go to page");
+  console.log("...logging into DoE");
 
-  const loginButtonSelector = ".hero-signin-form .container .btn-warning";
-  try {
-    await page.waitForSelector(loginButtonSelector, {
-      visible: true,
-      timeout: 2000,
-    });
-
-    // Found retake button
-    console.log("Found sign in button");
-    await page.click(retake);
-  } catch {
-    console.log("No sign in button found. First time filling out the form today");
-  }
 
   // selectors
   const username = "#vusername";
@@ -61,16 +54,23 @@ export default async (req, res) => {
   console.log("...typing password...");
   await page.type(password, process.env.DOE_PASSWORD);
   await page.waitForTimeout(100);
+  // await page.setRequestInterception(true)
+  // page.on('request', (request) => {
+  //   console.log(request.headers())
+  //   request.continue()
+  // })
 
-  console.log("...submitted successfully.");
-
+  console.log("...pressing submit...");
   await page.click(loginSubmitBtn);
+  
+  // const cookies = await page.cookies()
+  // console.log({cookies})
 
   /**
    * FILL OUT SCREENING
    */
 
-  await page.waitForTimeout(200);
+  // await page.waitForTimeout(200);
   await page.setExtraHTTPHeaders({
     accept: "*/*",
     "accept-language": "en-US,en;q=0.9,ko;q=0.8",
@@ -85,7 +85,7 @@ export default async (req, res) => {
     "sec-fetch-site": "same-origin",
     "x-requested-with": "XMLHttpRequest",
     referer: "https://healthscreening.schools.nyc/",
-    cookie: "" + process.env.COOKIE,
+    // cookie: cookies
   });
   await page.emulate({
     userAgent:
@@ -100,28 +100,38 @@ export default async (req, res) => {
     },
   });
 
+
   await page.goto("https://healthscreening.schools.nyc", {
     waitUntil: "networkidle2",
   });
 
-  await page.click(".hero-signin-form .btn");
-  await page.waitForTimeout(2000);
-
-  console.log("Go to page");
-
-  // FOR TESTING
-  const retake = ".entry-badges button";
-  // if (await page.$(retake) !== null) console.log('found');
+  const signinButton = ".hero-signin-form a.btn"
   try {
-    await page.waitForSelector(retake, {
+    await page.waitForSelector(signinButton, {
       visible: true,
       timeout: 2000,
     });
+    // Found "Sign In" button
+    console.log("...found signin button, clicking and waiting for redirect");
+    await page.click(signinButton);
+    // await page.waitForNetworkIdle()
+  } catch {
+    console.log("...no signin button found. Continuing...")
+  }
+
+  console.log("...going to quiz page");
+  // FOR TESTING
+  const retake = ".entry-badges button";
+  try {
+    await page.waitForSelector(retake, {
+      visible: true,
+      timeout: 5000,
+    });
     // Found retake button
-    console.log("Found retake button");
+    console.log("...found retake button");
     await page.click(retake);
   } catch {
-    console.log("No re-take button found. First time filling out the form today");
+    console.log("...no re-take button found. First time filling out the form today");
   }
 
   // selectors
@@ -130,11 +140,10 @@ export default async (req, res) => {
   await page.waitForSelector(first, {
     visible: true,
   });
-  // await page.waitForTimeout(1000);
-  console.log("First question found");
+  console.log("...first question found");
   await page.click(first);
   await page.waitForTimeout(1000);
-  console.log("First question clicked");
+  console.log("...first question clicked");
 
   // await page.waitForTimeout(1000);
   await page.mouse.wheel({
@@ -144,31 +153,30 @@ export default async (req, res) => {
   await page.waitForSelector(second, {
     visible: true,
   });
-  console.log("Second question found");
+  console.log("...second question found");
   await page.click(second);
   await page.waitForTimeout(1000);
-  console.log("Second question clicked");
+  console.log("...second question clicked");
 
   await page.mouse.wheel({
     deltaY: 400,
   });
   await page.waitForTimeout(1000);
-  console.log("Third question found");
+  console.log("...third question found");
   await page.click(third);
   await page.waitForTimeout(1000);
-  console.log("Third question clicked");
+  console.log("...third question clicked");
 
   const submitSelector = ".question-submit button[type='submit']";
   await page.waitForTimeout(1000);
   await page.waitForSelector(submitSelector, {
     visible: true,
   });
-  console.log("Submit button found");
+  console.log("...submit button found");
   await page.waitForTimeout(500);
-  // await page.waitForTimeout(2000);
   await page.click(submitSelector);
-  console.log("Submit button clicked");
-  console.log("Submitted successfully...");
+  console.log("...submit button clicked");
+  console.log("\n ======> SUBMITTED SUCCESSFULLY.");
   await page.waitForTimeout(3000);
   await page.mouse.wheel({
     deltaY: 200,
