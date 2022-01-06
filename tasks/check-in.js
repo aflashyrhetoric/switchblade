@@ -101,6 +101,7 @@ export default async (req, res) => {
   });
 
 
+  console.log("...going to https://healthscreening.schools.nyc")
   await page.goto("https://healthscreening.schools.nyc", {
     waitUntil: "networkidle2",
   });
@@ -119,7 +120,7 @@ export default async (req, res) => {
     console.log("...no signin button found. Continuing...")
   }
 
-  console.log("...going to quiz page");
+  console.log("...continuing onto the quiz itself");
   // FOR TESTING
   const retake = ".entry-badges button";
   try {
@@ -135,7 +136,7 @@ export default async (req, res) => {
   }
 
   // selectors
-  const [first, second, third] = ["#q1no", "#q2no", "#q3yes"];
+  const [first, second, third] = ["#q1no", "#q2no", "#q3no"];
 
   await page.waitForSelector(first, {
     visible: true,
