@@ -136,7 +136,15 @@ export default async (req, res) => {
   }
 
   // selectors
-  const [first, second, third] = ["#q1no", "#q2no", "#q3no"];
+  const [pre, first, second, third] = ["#spno","#q1no", "#q2no", "#q3no"];
+  
+  await page.waitForSelector(pre, {
+    visible: true,
+  });
+  console.log("...student pre-question found");
+  await page.click(pre);
+  await page.waitForTimeout(1000);
+  console.log("...student pre question clicked");
 
   await page.waitForSelector(first, {
     visible: true,
